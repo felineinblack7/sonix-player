@@ -20,14 +20,27 @@ jobs:
             automake libtool libtool-bin autoconf libgmp3-dev libmpfr-dev libmpc-dev \
             gtk-doc-tools gettext libffi-dev
 
-      - name: Replace rockboxdev.sh with patched version from Rockbox upstream
+      - name: Patch rockboxdev.sh for glib (Python 3.12 fix)
         run: |
           cd sonix-player
-          # Descarga el script oficial de Rockbox (que ya tiene el parche de Python 3.12)
-          wget -O rockboxdev/rockboxdev.sh "https://raw.githubusercontent.com/Rockbox/rockbox/master/tools/rockboxdev.sh"
-          chmod +x rockboxdev/rockboxdev.sh
-          # Verifica que el script descargado tenga el parche de autoreconf para glib
-          grep -n "autoreconf" rockboxdev/rockboxdev.sh | head -5
+          python3 - <<'PYEOF'
+          import re
+          path = 'rockboxdev/rockboxdev.sh'
+          src = open(path).read()
+          # Inserta 'autoreconf -fi' después de extraer glib
+          pattern = r'(extract "glib-\$glib_ver")'
+          replacement = r'\1\n    (cd glib-$glib_ver && autoreconf -fi)'
+          new_src, n = re.subn(pattern, replacement, src)
+          if n == 0:
+              raise SystemExit("ERROR: no se encontró la línea 'extract \"glib-$glib_ver\"'")
+          open(path, 'w').write(new_src)
+          print(f"Parche aplicado: {n} ocurrencia(s)")
+          PYEOF
+
+      - name: Set Rockbox build environment
+        run: |
+          echo "RBDEV_TARGET=mipsel-rockbox-linux-gnu" >> $GITHUB_ENV
+          echo "RBDEV_PREFIX=${{ github.workspace }}/sonix-player/rockbox-toolchain" >> $GITHUB_ENV
 
       - name: Build player
         run: |
