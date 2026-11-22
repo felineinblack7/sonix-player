@@ -12,22 +12,22 @@ jobs:
       - name: Verify MAX_FREEFORM fix
         run: grep -n "MAX_FREEFORM" sonix-player/src/system/decode/mp4.c
 
-      - name: Setup Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Verify Python version
-        run: |
-          python3 --version
-          which python3
-
-      - name: Install dependencies
+      - name: Install dependencies (including gtk-doc and gettext)
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential git pkg-config \
             wget texinfo bison flex p7zip-full squashfs-tools genisoimage perl \
-            automake libtool libtool-bin autoconf libgmp3-dev libmpfr-dev libmpc-dev
+            automake libtool libtool-bin autoconf libgmp3-dev libmpfr-dev libmpc-dev \
+            gtk-doc-tools gettext libffi-dev
+
+      - name: Replace rockboxdev.sh with patched version from Rockbox upstream
+        run: |
+          cd sonix-player
+          # Descarga el script oficial de Rockbox (que ya tiene el parche de Python 3.12)
+          wget -O rockboxdev/rockboxdev.sh "https://raw.githubusercontent.com/Rockbox/rockbox/master/tools/rockboxdev.sh"
+          chmod +x rockboxdev/rockboxdev.sh
+          # Verifica que el script descargado tenga el parche de autoreconf para glib
+          grep -n "autoreconf" rockboxdev/rockboxdev.sh | head -5
 
       - name: Build player
         run: |
