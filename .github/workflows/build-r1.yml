@@ -1,0 +1,46 @@
+name: Build patched R1 UPT
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify MAX_FREEFORM fix
+        run: grep -n "MAX_FREEFORM" sonix-player/src/system/decode/mp4.c
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential git pkg-config \
+            wget texinfo bison flex p7zip-full squashfs-tools genisoimage perl \
+            automake libtool libtool-bin autoconf libgmp3-dev libmpfr-dev libmpc-dev
+
+      - name: Build player
+        run: |
+          cd sonix-player
+          make target -j$(nproc)
+          ls -la sonix_player sonix_launch
+
+      - name: Get firmware base
+        run: |
+          cd sonix-packer
+          wget -O r1_original.upt "https://github.com/felineinblack7/sonix-player/releases/download/firmware-base/r1.upt"
+          ls -la r1_original.upt
+
+      - name: Build UPT
+        run: |
+          cd sonix-packer
+          cp ../sonix-player/sonix_player ../sonix-player/sonix_launch .
+          chmod +x sonix_player sonix_launch sonix_firmware_packer.sh
+          ./sonix_firmware_packer.sh
+
+      - name: Upload patched UPT
+        uses: actions/upload-artifact@v4
+        with:
+          name: r1-patched
+          path: sonix-packer/r1.upt
+          retention-days: 30
