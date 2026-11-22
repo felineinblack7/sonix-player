@@ -27,9 +27,14 @@ jobs:
           import re
           path = 'rockboxdev/rockboxdev.sh'
           src = open(path).read()
-          # 1. Insertar autoreconf después de extraer glib
           pattern = r'(extract "glib-\$glib_ver")'
-          replacement = r'\1\n    (cd glib-$glib_ver && sed -i "s/m4_copy(\\[AC_DEFUN\\],\\[glib_DEFUN\\])/m4_copy_force(\\[AC_DEFUN\\],\\[glib_DEFUN\\])/" m4macros/glib-gettext.m4 && autoreconf -fi)'
+          replacement = (
+              r'\1\n'
+              r'    (cd glib-$glib_ver && '
+              r'sed -i "s/m4_copy(\\[AC_DEFUN\\],\\[glib_DEFUN\\])/m4_copy_force(\\[AC_DEFUN\\],\\[glib_DEFUN\\])/" m4macros/glib-gettext.m4 && '
+              r'sed -i "s/m4_copy(\\[AC_REQUIRE\\],\\[glib_REQUIRE\\])/m4_copy_force(\\[AC_REQUIRE\\],\\[glib_REQUIRE\\])/" m4macros/glib-gettext.m4 && '
+              r'autoreconf -fi)'
+          )
           new_src, n = re.subn(pattern, replacement, src)
           if n == 0:
               raise SystemExit("ERROR: no se encontró la línea 'extract \"glib-$glib_ver\"'")
