@@ -12,7 +12,7 @@ jobs:
       - name: Verify MAX_FREEFORM fix
         run: grep -n "MAX_FREEFORM" sonix-player/src/system/decode/mp4.c
 
-      - name: Install dependencies (including gtk-doc and gettext)
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential git pkg-config \
@@ -20,16 +20,16 @@ jobs:
             automake libtool libtool-bin autoconf libgmp3-dev libmpfr-dev libmpc-dev \
             gtk-doc-tools gettext libffi-dev
 
-      - name: Patch rockboxdev.sh for glib (Python 3.12 fix)
+      - name: Patch rockboxdev.sh for glib (Python 3.12 + m4_copy fix)
         run: |
           cd sonix-player
           python3 - <<'PYEOF'
           import re
           path = 'rockboxdev/rockboxdev.sh'
           src = open(path).read()
-          # Inserta 'autoreconf -fi' después de extraer glib
+          # 1. Insertar autoreconf después de extraer glib
           pattern = r'(extract "glib-\$glib_ver")'
-          replacement = r'\1\n    (cd glib-$glib_ver && autoreconf -fi)'
+          replacement = r'\1\n    (cd glib-$glib_ver && sed -i "s/m4_copy(\\[AC_DEFUN\\],\\[glib_DEFUN\\])/m4_copy_force(\\[AC_DEFUN\\],\\[glib_DEFUN\\])/" m4macros/glib-gettext.m4 && autoreconf -fi)'
           new_src, n = re.subn(pattern, replacement, src)
           if n == 0:
               raise SystemExit("ERROR: no se encontró la línea 'extract \"glib-$glib_ver\"'")
@@ -37,14 +37,11 @@ jobs:
           print(f"Parche aplicado: {n} ocurrencia(s)")
           PYEOF
 
-      - name: Set Rockbox build environment
-        run: |
-          echo "RBDEV_TARGET=mipsel-rockbox-linux-gnu" >> $GITHUB_ENV
-          echo "RBDEV_PREFIX=${{ github.workspace }}/sonix-player/rockbox-toolchain" >> $GITHUB_ENV
-
       - name: Build player
         run: |
           cd sonix-player
+          export RBDEV_TARGET=mipsel-rockbox-linux-gnu
+          export RBDEV_PREFIX="$PWD/rockbox-toolchain"
           make target -j1
           ls -la sonix_player sonix_launch
 
