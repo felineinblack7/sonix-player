@@ -18,7 +18,7 @@
 #define SIZE_WINDOW 1024   // sample sizes cached at a time
 #define MAX_SMALL_BOX (4 * 1024 * 1024)
 #define MAX_DEPTH 12
-#define MAX_FREEFORM 8
+#define MAX_FREEFORM 64 // so Sonix can read ReplayGain tags from m4a files with many freeform tags, original was just 8
 
 struct chunk_run {
 	uint32_t first_chunk; // 1-based, as the file writes it
