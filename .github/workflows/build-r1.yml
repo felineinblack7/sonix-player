@@ -28,7 +28,7 @@ jobs:
       - name: Get firmware base
         run: |
           cd sonix-packer
-          wget -O r1_original.upt "https://github.com/felineinblack7/sonix-player/releases/download/firmware-base/r1.upt"
+          wget -O r1_original.upt "https://drive.google.com/file/d/1cvZdQeJsb2qYu2qv6sZaYJaP8vqW1LqG/view?usp=drive_link"
           ls -la r1_original.upt
 
       - name: Build UPT
