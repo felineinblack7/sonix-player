@@ -19,17 +19,43 @@ jobs:
             wget texinfo bison flex p7zip-full squashfs-tools genisoimage perl \
             automake libtool libtool-bin autoconf libgmp3-dev libmpfr-dev libmpc-dev
 
+      - name: Patch rockboxdev.sh for Python 3.12 (glib fix)
+        run: |
+          cd sonix-player
+          python3 - <<'PYEOF'
+          import re
+          path = 'rockboxdev/rockboxdev.sh'
+          src = open(path).read()
+          pattern = r'(glib-2\.46\.2/configure)'
+          replacement = r'autoreconf -fi\n    \1'
+          new_src, n = re.subn(pattern, replacement, src)
+          if n == 0:
+              raise SystemExit("ERROR: no se encontró el bloque de glib en rockboxdev.sh")
+          open(path, 'w').write(new_src)
+          print(f"Parche aplicado: {n} ocurrencia(s)")
+          PYEOF
+
       - name: Build player
         run: |
           cd sonix-player
           make target -j$(nproc)
           ls -la sonix_player sonix_launch
 
-      - name: Get firmware base
+      - name: Install gdown
+        run: pip install gdown
+
+      - name: Get firmware base from Google Drive
         run: |
           cd sonix-packer
-          wget -O r1_original.upt "https://drive.google.com/file/d/1cvZdQeJsb2qYu2qv6sZaYJaP8vqW1LqG/view?usp=drive_link"
+          # Descarga directa del archivo usando su ID de Google Drive
+          gdown "1cvZdQeJsb2qYu2qv6sZaYJaP8vqW1LqG" -O r1_original.upt
           ls -la r1_original.upt
+          
+          SIZE=$(stat -c%s r1_original.upt)
+          if [ "$SIZE" -lt 30000000 ]; then
+            echo "ERROR: r1_original.upt is only $SIZE bytes. Download likely failed."
+            exit 1
+          fi
 
       - name: Build UPT
         run: |
