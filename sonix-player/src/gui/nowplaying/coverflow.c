@@ -117,8 +117,10 @@
 #define CF_BACK_H_MIN 120
 #define CF_BACK_LIST_MAX 400
 #define CF_BACK_ROW_H 50
-#define CF_BACK_ROWS 100 // originally set at 64, defines the number of songs listed when selected an album in the coverflow view, albums like 69 Love Songs by The Magnetic Files are chopped.
+#define CF_BACK_ROWS 100 
 #define CF_BACK_RADIUS 16
+
+// CF_BACK_ROWS originally set at 64, defines the number of songs listed when selected an album in the coverflow view, albums like 69 Love Songs by The Magnetic Files are chopped, changed to 100
 
 // The scroll position is kept in 16.16 of a place, so a drag moves the column
 // by fractions of a record and every record's angle moves with it.
