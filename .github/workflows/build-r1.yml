@@ -20,7 +20,19 @@ jobs:
             automake libtool libtool-bin autoconf libgmp3-dev libmpfr-dev libmpc-dev \
             gtk-doc-tools gettext libffi-dev
 
+      # ⬇️ CACHÉ DEL TOOLCHAIN Y FREETYPE
+      - name: Cache Rockbox toolchain and FreeType
+        id: cache-toolchain
+        uses: actions/cache@v4
+        with:
+          path: |
+            sonix-player/rockbox-toolchain
+            sonix-player/freetype-target
+            sonix-player/tmp/rbdev-dl
+          key: rockbox-toolchain-v1-${{ hashFiles('sonix-player/rockboxdev/rockboxdev.sh') }}
+
       - name: Patch rockboxdev.sh for glib (Python 3.12 + m4_copy fix)
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
         run: |
           cd sonix-player
           python3 - <<'PYEOF'
